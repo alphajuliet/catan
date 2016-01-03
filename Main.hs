@@ -3,15 +3,14 @@
 
 import System.Random
 import System.Environment
-import qualified GenBoard as Gen
-import qualified DrawBoard as Draw
+import Catan
 -- import Diagrams.Backend.SVG.CmdLine
 
 ------------------------------------
 -- Command dispatcher
 dispatch :: [(String, [String] -> IO ())]
 dispatch = [ 
-  ("board", board),
+  ("gen-board", board),
   ("hex", hex) ]
 
 -- Main loop
@@ -23,7 +22,7 @@ main = do
 ------------------------------------
 -- Print out the board as a string
 board :: [String] -> IO ()
-board _  = print Gen.board
+board _  = print genBoard
 
 -- Display a hex of a given colour and type
 hex :: [String] -> IO ()
