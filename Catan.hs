@@ -1,26 +1,25 @@
--- GenBoard.hs
--- Generate a Settlers of Catan standard board
+-- Catan.hs
+-- Generate a Settlers of Catan standard board, and do some analysis and
+-- visualisation.
+-- aj 2015-12
 
-{- | Module to create a Catan board -}
-module GenBoard (
-  Resource,
-  Hex,
-  Coord,
-  Tile,
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
-  tiles,
-  stdMap,
-  board
-  )
+{- | Module to work with a Catan board -}
+module Catan (genBoard)
 where
 
 import Data.List
 import System.Random
 import System.Random.Shuffle
+import qualified Data.Map as Map
+import Diagrams.Prelude
 
 ------------------------------------
+-- Set up data structures
+
 {- | Define the contents of each tile -}
-data Resource = Brick | Wheat | Wood | Wool | Ore | Desert deriving (Show)
+data Resource = Brick | Grain | Wood | Wool | Ore | Desert deriving (Show, Ord, Eq)
 data Hex = Hex Integer Resource deriving (Show)
 type Coord = (Integer, Integer)
 data Tile = Tile Coord Hex deriving (Show)
@@ -31,9 +30,10 @@ hex_r (Hex _ r) = r
 tile_xy (Tile xy _) = xy
 tile_hex (Tile _ h) = h
 
+------------------------------------
 {- | Define the available tiles -}
 tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-tileResources = [Brick, Wheat, Wood, Wool, Ore]
+tileResources = [Brick, Grain, Wood, Wool, Ore]
 tileResourcesQ = [3, 4, 4, 4, 3]
 
 {- | Enumerate all the resources based on their quantity -}
@@ -68,10 +68,39 @@ stdMap = [
   ]
 
 {- | Create the full board by randomly assigning a tile to each hex -}
-board :: [Tile]
-board = zipWith Tile 
+genBoard :: [Tile]
+genBoard = zipWith Tile 
   stdMap $ 
   shuffleList (tiles resourcesDist gen) gen
   where gen = mkStdGen 100
 
+------------------------------------
+-- Draw the board
+------------------------------------
+
+{- | Convert hex axial coords to cartesian coords -}
+hexToXY :: Floating t => t -> t -> t -> (t, t)
+hexToXY size q r = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
+
+------------------------------------
+-- Map resources to colours
+type ColourMap = Map.Map Resource (Colour Double)
+colourMap = Map.fromList [(Brick, orange), (Grain, yellow), (Wood, green), (Wool, lightblue), (Ore, blue), (Desert, grey)]
+
+-- hex :: Int -> Colour Double -> Diagram B
+--hex n colour = 
+--  text (show n) # 
+--    fontSizeL 0.6 # 
+--    fc white <> 
+--  hexagon 1 # 
+--    fc colour #
+--    rotateBy (1/12)
+--
+---- drawBoard :: [Tile] -> Diagram B
+--drawBoard [] = return id
+--drawBoard ((Tile xy h):xs) = 
+--  hex (hex_n h) green <>
+--  drawBoard xs
+--
+--
 -- The End
