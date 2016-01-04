@@ -1,13 +1,19 @@
--- Catan.hs
--- Generate a Settlers of Catan standard board, and do some analysis and
--- visualisation.
--- aj 2015-12
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -funbox-strict-fields #-}
+{- |
+Module      :  $Header$
+Description :  Settlers of Catan board generation and analysis
+License     :  None
 
-{- | Module to work with a Catan board -}
-module Catan (genBoard)
-where
+Created     :  2015-12
+Maintainer  :  andrew@alphajuliet.com
+Stability   :  experimental
+
+Generate a Settlers of Catan standard board, and do some analysis and visualisation
+-}
+module Catan (
+  genBoard
+) where
 
 import Data.List
 import System.Random
@@ -18,89 +24,107 @@ import Diagrams.Prelude
 ------------------------------------
 -- Set up data structures
 
-{- | Define the contents of each tile -}
+-- |Define the contents of each tile
 data Resource = Brick | Grain | Wood | Wool | Ore | Desert deriving (Show, Ord, Eq)
+  
+-- |A hex with a resource and a number
 data Hex = Hex Integer Resource deriving (Show)
+
+-- |An alias for a 2D coordinate
 type Coord = (Integer, Integer)
+
+-- |A tile is a hex plus a location
 data Tile = Tile Coord Hex deriving (Show)
 
+------------------------------------
 -- Accessors
-hex_n (Hex n _) = n
-hex_r (Hex _ r) = r
-tile_xy (Tile xy _) = xy
-tile_hex (Tile _ h) = h
+hexN :: Hex -> Integer
+hexN (Hex n _) = n
+
+hexR :: Hex -> Resource
+hexR (Hex _ r) = r
+
+tileXY :: Tile -> Coord
+tileXY (Tile xy _) = xy
+
+tileHex :: Tile -> Hex
+tileHex (Tile _ h) = h
 
 ------------------------------------
-{- | Define the available tiles -}
+-- |Define the available tiles
 tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 tileResources = [Brick, Grain, Wood, Wool, Ore]
 tileResourcesQ = [3, 4, 4, 4, 3]
 
-{- | Enumerate all the resources based on their quantity -}
-enumerate :: [Integer] -> [a] -> [a]
-enumerate n = concat . zipWith replicate (fromInteger <$> n)
-
 resourcesDist :: [Resource]
 resourcesDist = enumerate tileResourcesQ tileResources
+  where enumerate ns = concat . zipWith replicate (map fromInteger ns)
 
 genHexes :: [Integer] -> [Resource] -> [Hex]
 genHexes = zipWith Hex
 
-{- | Randomly shuffle a list -}
+-- |Randomly shuffle a list
 -- @@TODO Replace with a real random source
 shuffleList :: RandomGen g => [a] -> g -> [a]
 shuffleList xs = shuffle' xs $ length xs 
 
-{- | Generate all the tiles and shuffle them -}
+-- |Generate all the tiles and shuffle them
 tiles :: RandomGen g => [Resource] -> g -> [Hex]
 tiles dist gen = genHexes tileNumbers (shuffleList dist gen) ++ [Hex 7 Desert] 
 
-{- | Define the standard hex board of 19 hexes in rows of 3, 4, 5, 4 and 3. 
-See http://www.redblobgames.com/grids/hexagons for details of the axial
-coordinate system used. -}
+-- |Define the standard hex board of 19 hexes in rows of 3, 4, 5, 4 and 3. 
+-- See http://www.redblobgames.com/grids/hexagons for details of the axial
+-- coordinate system used.
 stdMap :: [Coord]
 stdMap = [
   (0, -2), (1, -2), (2, -2),
   (-1, -1), (0, -1), (1, -1), (2, -1),
   (-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0),
   (-2, 1), (-1, 1), (0, 1), (1, 1),
-  (-2, 2), (-1, 2), (0, 2)
-  ]
+  (-2, 2), (-1, 2), (0, 2)]
 
-{- | Create the full board by randomly assigning a tile to each hex -}
+-- |Create the full board by randomly assigning a tile to each hex
 genBoard :: [Tile]
 genBoard = zipWith Tile 
   stdMap $ 
   shuffleList (tiles resourcesDist gen) gen
-  where gen = mkStdGen 100
+    where gen = mkStdGen 101
+
 
 ------------------------------------
 -- Draw the board
 ------------------------------------
 
-{- | Convert hex axial coords to cartesian coords -}
+-- |Convert hex axial coords to cartesian coords
+-- See http://www.redblobgames.com/grids/hexagons
 hexToXY :: Floating t => t -> t -> t -> (t, t)
 hexToXY size q r = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
 
 ------------------------------------
--- Map resources to colours
+-- |Map resources to colours
 type ColourMap = Map.Map Resource (Colour Double)
-colourMap = Map.fromList [(Brick, orange), (Grain, yellow), (Wood, green), (Wool, lightblue), (Ore, blue), (Desert, grey)]
+colourMap = Map.fromList [
+    (Brick, brown)
+  , (Grain, yellow)
+  , (Wood, green)
+  , (Wool, lightgreen)
+  , (Ore, lightblue)
+  , (Desert, grey) ]
 
 -- hex :: Int -> Colour Double -> Diagram B
---hex n colour = 
---  text (show n) # 
---    fontSizeL 0.6 # 
---    fc white <> 
---  hexagon 1 # 
---    fc colour #
---    rotateBy (1/12)
---
----- drawBoard :: [Tile] -> Diagram B
---drawBoard [] = return id
---drawBoard ((Tile xy h):xs) = 
---  hex (hex_n h) green <>
---  drawBoard xs
---
---
--- The End
+-- hex n colour = 
+--   text (show n) # 
+--     fontSizeL 0.6 # 
+--     fc white <> 
+--   hexagon 1 # 
+--     fc colour #
+--     rotateBy (1/12)
+
+-- drawBoard :: [Tile] -> Diagram B
+-- drawBoard [] = return id
+-- drawBoard ((Tile xy h):xs) = 
+--   hex (hexN h) green <>
+--   drawBoard xs
+
+
+ The End
