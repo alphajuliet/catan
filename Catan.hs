@@ -87,9 +87,7 @@ stdMap = [
 
 -- |Create the full board by randomly assigning a tile to each hex
 genBoard :: [Tile]
-genBoard = zipWith Tile 
-  stdMap $ 
-  shuffleList (tiles resourcesDist gen) gen
+genBoard = zipWith Tile stdMap $ shuffleList (tiles resourcesDist gen) gen
     where gen = mkStdGen 101
 
 
@@ -128,10 +126,8 @@ drawHex n (Just colour) =
 drawTile (Hex n r) = drawHex n colour 
   where colour = Map.lookup r colourMap
 
--- drawBoard :: [Tile] -> Diagram B
--- drawBoard [] = circle 0.05
--- drawBoard ((Tile xy (Hex n r)):xs) = drawTile (Hex n r) ||| drawBoard xs
-drawBoard = position (map mkShape genBoard)
-  where mkShape (Tile (x, y) hex) = (p2 (hexToXY 1.0 (x, y)), drawTile hex)
+-- |Draw a Catan board
+drawBoard b = position (map mkShape b)
+  where mkShape (Tile xy hex) = (p2 (hexToXY 1.0 xy), drawTile hex)
 
 -- The End
