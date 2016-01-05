@@ -1,4 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 {- |
 Module      :  $Header$
@@ -12,7 +13,8 @@ Stability   :  experimental
 Generate a Settlers of Catan standard board, and do some analysis and visualisation
 -}
 module Catan (
-  genBoard
+  genBoard,
+  hex
 ) where
 
 import Data.List
@@ -103,8 +105,9 @@ hexToXY size q r = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
 ------------------------------------
 -- |Map resources to colours
 type ColourMap = Map.Map Resource (Colour Double)
+
 colourMap = Map.fromList [
-    (Brick, brown)
+    (Brick, orange)
   , (Grain, yellow)
   , (Wood, green)
   , (Wool, lightgreen)
@@ -112,19 +115,20 @@ colourMap = Map.fromList [
   , (Desert, grey) ]
 
 -- hex :: Int -> Colour Double -> Diagram B
--- hex n colour = 
---   text (show n) # 
---     fontSizeL 0.6 # 
---     fc white <> 
---   hexagon 1 # 
---     fc colour #
---     rotateBy (1/12)
+-- |Draw a hex of a given colour with a number in the middle
+hex n colour =
+  text (show n) #
+    fontSizeL 0.6 #
+    fc white <>
+  hexagon 1 #
+    fc colour #
+    rotateBy (1/12)
 
--- drawBoard :: [Tile] -> Diagram B
+-- -- drawBoard :: [Tile] -> Diagram B
 -- drawBoard [] = return id
 -- drawBoard ((Tile xy h):xs) = 
 --   hex (hexN h) green <>
 --   drawBoard xs
 
 
- The End
+-- The End
