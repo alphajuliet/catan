@@ -6,7 +6,7 @@
 
 import System.Random
 import System.Environment
-import Catan
+import qualified Catan
 import Diagrams.Prelude
 import Diagrams.Backend.SVG (renderSVG)
 
@@ -15,7 +15,7 @@ import Diagrams.Backend.SVG (renderSVG)
 dispatch :: [(String, [String] -> IO ())]
 dispatch = [ 
   ("gen-board", printBoard),
-  ("hex", drawHex) ]
+  ("draw-board", renderBoard) ]
 
 -- |Main loop
 main = do 
@@ -26,13 +26,12 @@ main = do
 ------------------------------------
 -- |Print out the board as a string
 printBoard :: [String] -> IO ()
-printBoard _  = print genBoard
+printBoard _  = print Catan.genBoard
 
-dimensions :: SizeSpec V2 Float
+dimensions :: SizeSpec V2 Double
 dimensions = mkSizeSpec2D (Just 400) (Just 400)
 
 -- |Display a hex of a given colour and type
-drawHex :: [String] -> IO ()
-drawHex _ = renderSVG "out.svg" dimensions (hex 6 green)
-
+renderBoard :: [String] -> IO ()
+renderBoard _ = renderSVG "board.svg" dimensions Catan.drawBoard
 -- The End

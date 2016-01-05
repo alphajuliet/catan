@@ -14,7 +14,7 @@ Generate a Settlers of Catan standard board, and do some analysis and visualisat
 -}
 module Catan (
   genBoard,
-  hex
+  drawBoard
 ) where
 
 import Data.List
@@ -33,7 +33,7 @@ data Resource = Brick | Grain | Wood | Wool | Ore | Desert deriving (Show, Ord, 
 data Hex = Hex Integer Resource deriving (Show)
 
 -- |An alias for a 2D coordinate
-type Coord = (Integer, Integer)
+type Coord = (Double, Double)
 
 -- |A tile is a hex plus a location
 data Tile = Tile Coord Hex deriving (Show)
@@ -99,8 +99,8 @@ genBoard = zipWith Tile
 
 -- |Convert hex axial coords to cartesian coords
 -- See http://www.redblobgames.com/grids/hexagons
-hexToXY :: Floating t => t -> t -> t -> (t, t)
-hexToXY size q r = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
+-- hexToXY :: Double t => t -> (t, t) -> (t, t)
+hexToXY size (q, r) = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
 
 ------------------------------------
 -- |Map resources to colours
@@ -108,7 +108,7 @@ type ColourMap = Map.Map Resource (Colour Double)
 
 colourMap = Map.fromList [
     (Brick, orange)
-  , (Grain, yellow)
+  , (Grain, gold)
   , (Wood, green)
   , (Wool, lightgreen)
   , (Ore, lightblue)
@@ -116,19 +116,22 @@ colourMap = Map.fromList [
 
 -- hex :: Int -> Colour Double -> Diagram B
 -- |Draw a hex of a given colour with a number in the middle
-hex n colour =
+drawHex n (Just colour) =
   text (show n) #
-    fontSizeL 0.6 #
+    fontSizeL 0.8 #
     fc white <>
   hexagon 1 #
     fc colour #
     rotateBy (1/12)
 
--- -- drawBoard :: [Tile] -> Diagram B
--- drawBoard [] = return id
--- drawBoard ((Tile xy h):xs) = 
---   hex (hexN h) green <>
---   drawBoard xs
+-- |Draw a tile
+drawTile (Hex n r) = drawHex n colour 
+  where colour = Map.lookup r colourMap
 
+-- drawBoard :: [Tile] -> Diagram B
+-- drawBoard [] = circle 0.05
+-- drawBoard ((Tile xy (Hex n r)):xs) = drawTile (Hex n r) ||| drawBoard xs
+drawBoard = position (map mkShape genBoard)
+  where mkShape (Tile (x, y) hex) = (p2 (hexToXY 1.0 (x, y)), drawTile hex)
 
 -- The End
