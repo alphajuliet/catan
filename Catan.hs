@@ -39,20 +39,6 @@ type Coord = (Double, Double)
 data Tile = Tile Coord Hex deriving (Show)
 
 ------------------------------------
--- Accessors
-hexN :: Hex -> Integer
-hexN (Hex n _) = n
-
-hexR :: Hex -> Resource
-hexR (Hex _ r) = r
-
-tileXY :: Tile -> Coord
-tileXY (Tile xy _) = xy
-
-tileHex :: Tile -> Hex
-tileHex (Tile _ h) = h
-
-------------------------------------
 -- |Define the available tiles
 tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 tileResources = [Brick, Grain, Wood, Wool, Ore]
@@ -62,9 +48,6 @@ resourcesDist :: [Resource]
 resourcesDist = enumerate tileResourcesQ tileResources
   where enumerate ns = concat . zipWith replicate (map fromInteger ns)
 
-genHexes :: [Integer] -> [Resource] -> [Hex]
-genHexes = zipWith Hex
-
 -- |Randomly shuffle a list
 -- @@TODO Replace with a real random source
 shuffleList :: RandomGen g => [a] -> g -> [a]
@@ -72,7 +55,7 @@ shuffleList xs = shuffle' xs $ length xs
 
 -- |Generate all the tiles and shuffle them
 tiles :: RandomGen g => [Resource] -> g -> [Hex]
-tiles dist gen = genHexes tileNumbers (shuffleList dist gen) ++ [Hex 7 Desert] 
+tiles dist gen = zipWith Hex tileNumbers (shuffleList dist gen) ++ [Hex 7 Desert] 
 
 -- |Define the standard hex board of 19 hexes in rows of 3, 4, 5, 4 and 3. 
 -- See http://www.redblobgames.com/grids/hexagons for details of the axial
