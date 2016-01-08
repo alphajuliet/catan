@@ -18,6 +18,7 @@ module Catan (
 ) where
 
 import Data.List
+import Data.Maybe
 import System.Random
 import System.Random.Shuffle
 import qualified Data.Map as Map
@@ -95,19 +96,20 @@ colourMap = Map.fromList [
   , (Ore, lightblue)
   , (Desert, grey) ]
 
--- hex :: Int -> Colour Double -> Diagram B
 -- |Draw a hex of a given colour with a number in the middle
-drawHex n (Just colour) =
+-- hex :: a -> Maybe (Colour Double) -> Diagram B
+drawHex n colour =
   text (show n) #
     fontSizeL 0.8 #
     fc white <>
   hexagon 1 #
-    fc colour #
+    fc (fromJust colour) #
     rotateBy (1/12)
 
 -- |Draw a tile
 drawTile (Hex n r) = drawHex n colour 
-  where colour = Map.lookup r colourMap
+  where colour :: Maybe (Colour Double) 
+        colour = Map.lookup r colourMap
 
 -- |Draw a Catan board
 drawBoard b = position (map mkShape b)
