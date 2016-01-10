@@ -23,6 +23,7 @@ import System.Random
 import System.Random.Shuffle
 import qualified Data.Map as Map
 import Diagrams.Prelude
+import GHC.Exts
 
 ------------------------------------
 -- Set up data structures
@@ -114,5 +115,26 @@ drawTile (Hex n r) = drawHex n colour
 -- |Draw a Catan board
 drawBoard b = position (map mkShape b)
   where mkShape (Tile xy hex) = (p2 (hexToXY 1.0 xy), drawTile hex)
+
+
+------------------------------------
+-- Score the resources
+------------------------------------
+
+bd :: [Tile]
+bd = genBoard
+
+-- |Group the hexes by the type of resource
+hexesByResource :: [Tile] -> [[Hex]]
+hexesByResource board = groupWith (\(Hex _ r) -> r) (hexes board)
+  where hexes = map (\(Tile _ h) -> h)
+
+-- |Summarise the board in terms of each resource
+-- @@TODO Find a better way to do this
+summarise :: [Tile] -> [(Resource, [Integer])]
+summarise board = zip (f h) (g h)
+  where f = map ((\(Hex _ r) -> r) . head)  -- extract the name of each resource
+        g = map (map (\(Hex n _) -> n))     -- extract the values of each hex by resource
+        h = hexesByResource board           -- group tiles by resource
 
 -- The End
