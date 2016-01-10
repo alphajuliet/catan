@@ -137,4 +137,23 @@ summarise board = zip (f h) (g h)
         g = map (map (\(Hex n _) -> n))     -- extract the values of each hex by resource
         h = hexesByResource board           -- group tiles by resource
 
+-- |Points for each hex value from 0 to 12. Note that there are no 0-hexes, and
+-- that a 7 is a desert and therefore scores 0 points.
+-- Note also that there is an extra zero at the start because Haskell array
+-- indices start at zero.
+points = [0] ++ [0..5] ++ [0] ++ [5,4..1]
+
+-- |Map into a target array given an array of indices
+mapOnto :: [a] -> [Integer] -> [a]
+mapOnto target indices = map (target!!) (map fromInteger indices)
+
+-- |Score the resources across the board
+-- @@TODO Tidy this up too.
+scoreBoard :: (Enum b, Num b) => [Tile] -> [(Resource, b)]
+scoreBoard board = zip (f h) y
+  where x = map snd (summarise board)
+        y = map (sum . mapOnto points) x
+        f = map ((\(Hex _ r) -> r) . head)
+        h = hexesByResource board
+
 -- The End
