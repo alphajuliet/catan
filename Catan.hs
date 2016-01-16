@@ -42,23 +42,20 @@ type Coord = (Double, Double)
 data Tile = Tile Coord Hex deriving (Show)
 
 ------------------------------------
--- |Define the available tiles
-tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-tileResources = [Brick, Grain, Wood, Wool, Ore]
-tileResourcesQ = [3, 4, 4, 4, 3]
+
+-- |Randomly shuffle a list
+-- @@TODO Replace with a real random source
+shuffleList :: [a] -> [a]
+shuffleList xs = shuffle' xs (length xs) gen
+  where gen = mkStdGen 42
+
+-- |Generate all the tiles and shuffle them
+tiles :: [Integer] -> [Resource] -> [Hex]
+tiles nums dist = zipWith Hex nums (shuffleList dist) ++ [Hex 7 Desert] 
 
 resourcesDist :: [Resource]
 resourcesDist = enumerate tileResourcesQ tileResources
   where enumerate ns = concat . zipWith replicate (map fromInteger ns)
-
--- |Randomly shuffle a list
--- @@TODO Replace with a real random source
-shuffleList :: RandomGen g => [a] -> g -> [a]
-shuffleList xs = shuffle' xs $ length xs 
-
--- |Generate all the tiles and shuffle them
-tiles :: RandomGen g => [Resource] -> g -> [Hex]
-tiles dist gen = zipWith Hex tileNumbers (shuffleList dist gen) ++ [Hex 7 Desert] 
 
 -- |Define the standard hex board of 19 hexes in rows of 3, 4, 5, 4 and 3. 
 -- See http://www.redblobgames.com/grids/hexagons for details of the axial
@@ -71,11 +68,14 @@ stdMap = [
   (-2, 1), (-1, 1), (0, 1), (1, 1),
   (-2, 2), (-1, 2), (0, 2)]
 
+-- |Define the available tiles
+tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+tileResources = [Brick, Grain, Wood, Wool, Ore]
+tileResourcesQ = [3, 4, 4, 4, 3]
+
 -- |Create the full board by randomly assigning a tile to each hex
 genBoard :: [Tile]
-genBoard = zipWith Tile stdMap $ shuffleList (tiles resourcesDist gen) gen
-    where gen = mkStdGen 101
-
+genBoard = zipWith Tile stdMap $ shuffleList (tiles tileNumbers resourcesDist)
 
 ------------------------------------
 -- Draw the board
