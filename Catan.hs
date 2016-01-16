@@ -13,6 +13,8 @@ Stability   :  experimental
 Generate a Settlers of Catan standard board, and do some analysis and visualisation
 -}
 module Catan (
+  stdMap,
+  stdHex,
   genBoard,
   drawBoard,
   scoreBoard
@@ -49,14 +51,15 @@ shuffleList :: [a] -> [a]
 shuffleList xs = shuffle' xs (length xs) gen
   where gen = mkStdGen 42
 
--- |Generate all the tiles and shuffle them
-tiles :: [Integer] -> [Resource] -> [Hex]
-tiles nums dist = zipWith Hex nums (shuffleList dist) ++ [Hex 7 Desert] 
+-- |Generate all the hexes and shuffle them
+hexes :: [Integer] -> [Resource] -> [Hex]
+hexes nums dist = zipWith Hex nums (shuffleList dist) ++ [Hex 7 Desert] 
 
-resourcesDist :: [Resource]
-resourcesDist = enumerate tileResourcesQ tileResources
-  where enumerate ns = concat . zipWith replicate (map fromInteger ns)
+-- |Enumerate a list based on the given quantities
+enumerate :: [Integer] -> [a] -> [a]
+enumerate ns = concat . zipWith replicate (map fromInteger ns)
 
+------------------------------------
 -- |Define the standard hex board of 19 hexes in rows of 3, 4, 5, 4 and 3. 
 -- See http://www.redblobgames.com/grids/hexagons for details of the axial
 -- coordinate system used.
@@ -69,13 +72,16 @@ stdMap = [
   (-2, 2), (-1, 2), (0, 2)]
 
 -- |Define the available tiles
-tileNumbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-tileResources = [Brick, Grain, Wood, Wool, Ore]
-tileResourcesQ = [3, 4, 4, 4, 3]
+stdHex = hexes ns rs
+  where ns = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+        rs = enumerate count resources
+        resources = [Brick, Grain, Wood, Wool, Ore]
+        count = [3, 4, 4, 4, 3]
 
--- |Create the full board by randomly assigning a tile to each hex
-genBoard :: [Tile]
-genBoard = zipWith Tile stdMap $ shuffleList (tiles tileNumbers resourcesDist)
+------------------------------------
+-- |Create a full board by randomly assigning a hex to each location
+genBoard :: [Coord] -> [Hex] -> [Tile]
+genBoard coords hs = zipWith Tile coords $ shuffleList hs
 
 ------------------------------------
 -- Draw the board
@@ -123,7 +129,7 @@ drawBoard b = position (map mkShape b)
 ------------------------------------
 
 bd :: [Tile]
-bd = genBoard
+bd = genBoard stdMap stdHex
 
 -- |Group the hexes by the type of resource
 hexesByResource :: [Tile] -> [[Hex]]

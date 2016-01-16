@@ -26,12 +26,13 @@ main = do
 ------------------------------------
 -- |Print out the board as a string
 printBoard :: [String] -> IO ()
-printBoard _  = print Catan.genBoard
+printBoard _  = print $ Catan.genBoard Catan.stdMap Catan.stdHex
 
 dimensions :: SizeSpec V2 Double
 dimensions = mkSizeSpec2D (Just 400) (Just 400)
 
 -- |Display a hex of a given colour and type
 renderBoard :: [String] -> IO ()
-renderBoard _ = renderSVG "board.svg" dimensions $ Catan.drawBoard Catan.genBoard
+renderBoard _ = renderSVG "board.svg" dimensions $ Catan.drawBoard $ Catan.genBoard Catan.stdMap Catan.stdHex
+
 -- The End
