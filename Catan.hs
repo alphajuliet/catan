@@ -14,7 +14,8 @@ Generate a Settlers of Catan standard board, and do some analysis and visualisat
 -}
 module Catan (
   genBoard,
-  drawBoard
+  drawBoard,
+  scoreBoard
 ) where
 
 import Data.List
@@ -30,7 +31,7 @@ import GHC.Exts
 
 -- |Define the contents of each tile
 data Resource = Brick | Grain | Wood | Wool | Ore | Desert deriving (Show, Ord, Eq)
-  
+
 -- |A hex with a resource and a number
 data Hex = Hex Integer Resource deriving (Show)
 
@@ -145,7 +146,7 @@ points = [0] ++ [0..5] ++ [0] ++ [5,4..1]
 
 -- |Map into a target array given an array of indices
 mapOnto :: [a] -> [Integer] -> [a]
-mapOnto target indices = map (target!!) (map fromInteger indices)
+mapOnto target = map ((target!!) . fromInteger)
 
 -- |Score the resources across the board
 -- @@TODO Tidy this up too.
