@@ -35,7 +35,10 @@ import GHC.Exts
 data Resource = Brick | Grain | Wood | Wool | Ore | Desert deriving (Show, Ord, Eq)
 
 -- |A hex with a resource and a number
-data Hex = Hex Integer Resource deriving (Show)
+data Hex = Hex { 
+  number :: Integer,
+  rsrc :: Resource
+} deriving (Show)
 
 -- |An alias for a 2D coordinate
 type Coord = (Double, Double)
@@ -128,39 +131,34 @@ drawBoard b = position (map mkShape b)
 -- Score the resources
 ------------------------------------
 
-bd :: [Tile]
-bd = genBoard stdMap stdHex
-
 -- |Group the hexes by the type of resource
 hexesByResource :: [Tile] -> [[Hex]]
-hexesByResource board = groupWith (\(Hex _ r) -> r) (hexes board)
-  where hexes = map (\(Tile _ h) -> h)
+hexesByResource board = groupWith rsrc $ allHexes board
+  where allHexes = map (\(Tile _ h) -> h)
 
--- |Summarise the board in terms of each resource
+-- |Summarise the board hex numbers by resource
 -- @@TODO Find a better way to do this
 summarise :: [Tile] -> [(Resource, [Integer])]
 summarise board = zip (f h) (g h)
-  where f = map ((\(Hex _ r) -> r) . head)  -- extract the name of each resource
-        g = map (map (\(Hex n _) -> n))     -- extract the values of each hex by resource
+  where f = map (rsrc . head)  -- extract the name of each resource
+        g = map (map number)   -- extract the values of each hex by resource
         h = hexesByResource board           -- group tiles by resource
 
 -- |Points for each hex value from 0 to 12. Note that there are no 0-hexes, and
 -- that a 7 is a desert and therefore scores 0 points.
 -- Note also that there is an extra zero at the start because Haskell array
--- indices start at zero.
+-- indices start at zero and our first hex value is 2.
 points = [0] ++ [0..5] ++ [0] ++ [5,4..1]
 
--- |Map into a target array given an array of indices
-mapOnto :: [a] -> [Integer] -> [a]
-mapOnto target = map ((target!!) . fromInteger)
+-- |Select elements from a target array given an array of indices
+selectFromList :: [a] -> [Integer] -> [a]
+selectFromList target = map ((target!!) . fromInteger)
 
 -- |Score the resources across the board
--- @@TODO Tidy this up too.
 scoreBoard :: (Enum b, Num b) => [Tile] -> [(Resource, b)]
-scoreBoard board = zip (f h) y
-  where x = map snd (summarise board)
-        y = map (sum . mapOnto points) x
-        f = map ((\(Hex _ r) -> r) . head)
-        h = hexesByResource board
+scoreBoard board = zip (resources summ) (scores summ)
+  where summ = summarise board
+        resources = map fst
+        scores = map $ (sum . selectFromList points) . snd
 
 -- The End
