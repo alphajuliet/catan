@@ -33,6 +33,6 @@ dimensions = mkSizeSpec2D (Just 400) (Just 400)
 
 -- |Display a hex of a given colour and type
 renderBoard :: [String] -> IO ()
-renderBoard _ = renderSVG "board.svg" dimensions $ Catan.drawBoard $ Catan.genBoard Catan.stdMap Catan.stdHex
+renderBoard _ = renderSVG "board.svg" dimensions $ Catan.drawBoard $ Catan.stdBoard
 
 -- The End

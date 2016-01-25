@@ -16,8 +16,9 @@ module Catan (
   stdMap,
   stdHex,
   genBoard,
+  stdBoard,
   drawBoard,
-  scoreBoard
+  scoreResources
 ) where
 
 import Data.List
@@ -86,6 +87,8 @@ stdHex = hexes ns rs
 genBoard :: [Coord] -> [Hex] -> [Tile]
 genBoard coords hs = zipWith Tile coords $ shuffleList hs
 
+stdBoard = genBoard stdMap stdHex
+
 ------------------------------------
 -- Draw the board
 ------------------------------------
@@ -97,8 +100,8 @@ hexToXY size (q, r) = ( size * sqrt 3 * (q + r/2), size * 1.5 * r )
 
 ------------------------------------
 -- |Map resources to colours
-type ColourMap = Map.Map Resource (Colour Double)
-
+type ColourMap = Map.Map Resource (Colour Double) 
+  
 colourMap = Map.fromList [
     (Brick, orange)
   , (Grain, gold)
@@ -140,9 +143,9 @@ hexesByResource board = groupWith rsrc $ allHexes board
 -- @@TODO Find a better way to do this
 summarise :: [Tile] -> [(Resource, [Integer])]
 summarise board = zip (f h) (g h)
-  where f = map (rsrc . head)  -- extract the name of each resource
-        g = map (map number)   -- extract the values of each hex by resource
-        h = hexesByResource board           -- group tiles by resource
+  where f = map (rsrc . head)       -- extract the name of each resource
+        g = map (map number)        -- extract the values of each hex by resource
+        h = hexesByResource board   -- group tiles by resource
 
 -- |Points for each hex value from 0 to 12. Note that there are no 0-hexes, and
 -- that a 7 is a desert and therefore scores 0 points.
@@ -155,10 +158,37 @@ selectFromList :: [a] -> [Integer] -> [a]
 selectFromList target = map ((target!!) . fromInteger)
 
 -- |Score the resources across the board
-scoreBoard :: (Enum b, Num b) => [Tile] -> [(Resource, b)]
-scoreBoard board = zip (resources summ) (scores summ)
+scoreResources :: (Enum b, Num b) => [Tile] -> [(Resource, b)]
+scoreResources board = zip (resources summ) (scores summ)
   where summ = summarise board
         resources = map fst
         scores = map $ (sum . selectFromList points) . snd
+
+------------------------------------
+-- Score the vertices
+------------------------------------
+
+-- |Coordinate add
+tadd :: Coord -> Coord -> Coord
+tadd (x1, y1) (x2, y2) = (x1+x2, y1+y2)
+
+-- |These are the coordinates for the six immediate neighbours of a hex when using
+-- axial coordinates. The order is anticlockwise from the eastern neighbour. It
+-- checks that the neighbours are on the given board.
+tileNeighbours :: Tile -> [Coord] -> [Coord]
+tileNeighbours (Tile xy _) aMap = filter onMap $ (xy `tadd`) <$> offsets
+  where offsets = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)]
+        onMap t = t `elem` aMap
+
+-- |Rotate an array left by one element
+rotateLeft :: [a] -> [a]
+rotateLeft [] = []
+rotateLeft (x:xs) = concat [xs, [x]]
+
+-- |Each of the six vertices of a hex is shared with up to two neighbours. For
+-- each of the six vertices, the offsets of the two neighbouting hexes (going
+-- anticlockwise from the vertex at 2 o'clock...
+-- vertexNeighbours :: [Coord]
+-- vertexNeighbours =  
 
 -- The End
